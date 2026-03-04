@@ -23,11 +23,11 @@ delta_rate = v2_refusal_rate - v1_refusal_rate
 
 C. scenario_regression_topn.csv
 找“退化最明显”的场景 TopN（用 config里的 topn）：
-你需要先按 scenario 分桶，计算每个版本：
+按 scenario 分桶，计算每个版本：
 refusal_rate
 dislike_rate
 avg_latency_ms
-然后计算差值：
+计算差值：
 delta_refusal_rate
 delta_dislike_rate
 delta_latency_ms
@@ -38,10 +38,7 @@ D. bad_cases_sample.csv
 is_refusal==1 且 refusal_reason=="RISK_KEYWORD"
 latency_ms >= bad_latency_threshold_ms
 output_len <= short_output_threshold_chars 且 is_refusal==0
+每个版本各抽取最多 50 条
 
 
 第二版：预计增加数据清洗，补齐调用入口
-
-version, request_id, ts, scenario, is_refusal, refusal_reason, latency_ms, output_len, user_vote, output_text
-
-每个版本各抽取最多 50 条（如果不足就全出）。抽样规则你定，但要可复现（比如固定 random_state 或取最新/最早）。
