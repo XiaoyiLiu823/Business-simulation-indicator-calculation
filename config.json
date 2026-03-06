@@ -1,0 +1,5 @@
+{
+  "topn": 5,
+  "bad_latency_threshold_ms": 2000,
+  "short_output_threshold_chars": 30
+}
