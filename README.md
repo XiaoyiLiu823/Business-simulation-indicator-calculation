@@ -1,44 +1,38 @@
-版本迭代中
+# 审核策略优化分析项目
 
-第一版：已实现
-A. overall_metrics.csv
-对比 v1 / v2 的总体指标（每行一个版本）：
-total_requests（去重后总请求数）
-refusal_rate
-avg_latency_ms
-p50_latency_ms
-p90_latency_ms
-avg_output_len
-p50_output_len
-p90_output_len
-like_rate（user_vote==1 的占比）
-dislike_rate（user_vote==-1 的占比）
+## 项目背景
+安全团队收紧内容审核规则后，业务团队反馈用户投诉率上升。本项目通过数据分析定位问题根因，为策略调优提供数据支撑。
 
-B. refusal_reason_diff.csv
-按 refusal_reason 分桶统计并对比：
-v1_refusal_cnt、v1_refusal_rate（分母用该版本总请求数）
-v2_refusal_cnt、v2_refusal_rate
-delta_rate = v2_refusal_rate - v1_refusal_rate
-按 delta_rate 降序排序，输出全量。
+## 核心问题
+- 规则收紧后，哪些用户/场景被"误伤"？
+- 投诉上升是普遍性下降还是特定场景退化？
+- 如何平衡安全与用户体验？
 
-C. scenario_regression_topn.csv
-找“退化最明显”的场景 TopN（用 config里的 topn）：
-按 scenario 分桶，计算每个版本：
-refusal_rate
-dislike_rate
-avg_latency_ms
-计算差值：
-delta_refusal_rate
-delta_dislike_rate
-delta_latency_ms
+## 分析框架
 
-D. bad_cases_sample.csv
-抽取“疑似误拒/体验差”的样本，方便人工看：
-满足任一条件就入选：
-is_refusal==1 且 refusal_reason=="RISK_KEYWORD"
-latency_ms >= bad_latency_threshold_ms
-output_len <= short_output_threshold_chars 且 is_refusal==0
-每个版本各抽取最多 50 条
+### 数据分层维度
+| 维度 | 说明 | 业务意义 |
+|-----|------|---------|
+| refusal_reason | 拒答原因码（RISK_KEYWORD/SELF_HARM等） | 定位规则收紧的具体类型 |
+| scenario | 对话场景（coding/medical/finance等） | 识别业务敏感场景 |
+| user_vote | 用户反馈（点赞/点踩） | 直接用户体验指标 |
+| latency_ms | 响应延迟 | 性能体验指标 |
+| output_len | 输出长度 | 内容完整性指标 |
 
+### 核心指标
+- **拒答率**：is_refusal = 1 的请求占比
+- **点踩率**：user_vote = -1 的请求占比  
+- **延迟分位数**：P50/P90 latency_ms
+- **Bad Case率**：疑似误拒、高延迟、短回答样本占比
 
-第二版：预计增加数据清洗，补齐调用入口
+## 关键发现
+
+真实原始数据因保密需求暂时无法提供
+
+**核心结论**：规则收紧对**coding场景误伤严重**（技术问答误判为风险），medical场景因专业术语拦截也存在过度拒答。
+
+## 技术实现
+
+### 依赖
+```bash
+pip install pandas
